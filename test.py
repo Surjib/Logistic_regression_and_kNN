@@ -7,87 +7,142 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+
+def check_results_KNN (k_values):
+    KNN_model_results_test = []
+    KNN_model_results_train = []
+    KNN_cross_score_train = []
+    KNN_cross_score_test = []
+
+    for k in range (len(k_values)):
+        knn_model = KNeighborsClassifier(n_neighbors= k+1)
+
+        knn_model.fit(X_train.values, Y_train.values)
+        Y_pred = knn_model.predict(X_test.values)
+        KNN_model_results_train.append(accuracy_score(Y_test.values, Y_pred) * 100)
+
+        KNN_cross_score_train.append(cross_val_score(knn_model, X_train.values, Y_train.values, cv=kf, scoring='accuracy'))
+
+        knn_model.fit(X_test.values, Y_test.values)
+        Y_pred = knn_model.predict(X_test.values)
+        KNN_model_results_test.append(accuracy_score(Y_test.values, Y_pred) * 100)
+
+        KNN_cross_score_test.append(cross_val_score(knn_model, X_test.values, Y_test.values, cv=kf, scoring='accuracy'))
+    return  KNN_model_results_train, KNN_cross_score_train, KNN_model_results_test, KNN_cross_score_test
+
+
+def rescaler (x_values, diagnosis):
+    scaler = StandardScaler()
+    X_new = scaler.fit_transform(x_values)
+    print(X_new)
+
+    X_train_res, X_test_res, Y_train_res, Y_test_res = train_test_split(X_new, diagnosis, test_size=0.2, random_state=42);
+    return X_train_res, X_test_res, Y_train_res, Y_test_res
+
+def check_results_LR(C):
+    LR_model_results_test = []
+    LR_model_results_train = []
+    LR_cross_score_train = []
+    LR_cross_score_test = []
+
+    for j in C:
+        lr_model = LogisticRegression(C=j, solver='lbfgs', max_iter=100)
+
+        lr_model.fit(X_train.values, Y_train.values)
+        Y_pred = lr_model.predict(X_test.values)
+        LR_model_results_train.append(accuracy_score(Y_test.values, Y_pred) * 100)
+        LR_cross_score_train.append(cross_val_score(lr_model, X_train.values, Y_train.values, cv=kf, scoring='accuracy'))
+
+        lr_model.fit(X_train.values, Y_train.values)
+        Y_pred = lr_model.predict(X_test.values)
+        LR_model_results_test.append(accuracy_score(Y_test.values, Y_pred) * 100)
+        LR_cross_score_test.append(cross_val_score(lr_model, X_test.values, Y_test.values, cv=kf, scoring='accuracy'))
+
+    return LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test
+
+
+def result_graphs(X, model_test, model_train, score_test, score_train, is_knn):
+    if is_knn:
+        label = 'Neighbours'
+    else:
+        label = 'C'
+
+    plt.subplot(2, 2, 1)
+    plt.plot(X, model_train, 'blue')
+    plt.title("Train", fontsize=10)
+    plt.ylabel('Accuracy (%)', fontsize=8)
+    plt.xlabel(label, fontsize=8)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 2)
+    plt.plot(X, model_test, 'blue')
+    plt.title("Test", fontsize=10)
+    plt.ylabel('Accuracy (%)', fontsize=8)
+    plt.xlabel(label, fontsize=8)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 3)
+    plt.plot(X, score_train, 'blue')
+    plt.title("Train", fontsize=10)
+    plt.ylabel('CV score', fontsize=8)
+    plt.xlabel(label, fontsize=8)
+    plt.grid(True)
+
+    plt.subplot(2, 2, 4)
+    plt.plot(X, score_test, 'blue')
+    plt.title("Test", fontsize=10)
+    plt.ylabel('CV score', fontsize=8)
+    plt.xlabel(label, fontsize=8)
+    plt.grid(True)
+
 
 data_frame = read_csv("D:/DZ/11sem/AI_Enregy/LR1/breast_cancer.csv");
-data_frame.drop(["id",  "Unnamed: 32"], axis = 1, inplace = True)
 # print(data_frame);
+data_frame.drop(["id",  "Unnamed: 32"], axis = 1, inplace = True)
 
 
-
-
-# data_frame["Zero"] = 0;
-#
-# Y = data_frame["Zero"];
-# print(X, "\n----------------------------");
-# print(Y);
 numeral_val = get_dummies(data_frame);
-# print(numeral_val);
 diagnosis = numeral_val.loc[:,"diagnosis_B"];
 
-# print(diagnosis)
-X_train, X_test, Y_train, Y_test = train_test_split(numeral_val, diagnosis, test_size=0.2, random_state=42);
-
-# print(X_train, X_test, Y_train, Y_test);
-
-# print(numeral_val);
-
-# knn_model = KNeighborsClassifier(n_neighbors=5)
-# knn_model.fit(X_train, Y_train)
 kf = KFold(n_splits=5, shuffle=True);
 
+
 k_values = []
+
+X_train, X_test, Y_train, Y_test = train_test_split(numeral_val, diagnosis, test_size=0.2, random_state=42);
+
+
+
+
 for i in range(50):
     k_values.append(i+1)
 
-knn_results_test = []
-knn_results_train = []
-
-cross_score_train = []
-cross_score_test = []
-
-
-for k in range (len(k_values)):
-    knn_model = KNeighborsClassifier(n_neighbors= k+1)
-
-    knn_model.fit(X_train, Y_train)
-    Y_pred = knn_model.predict(X_test.values)
-    knn_results_train.append(accuracy_score(Y_test, Y_pred) * 100)
-
-    cross_score_train.append(cross_val_score(knn_model, X_train.values, Y_train.values, cv=kf, scoring='accuracy'))
-
-    knn_model.fit(X_test, Y_test)
-    Y_pred = knn_model.predict(X_test.values)
-    knn_results_test.append(accuracy_score(Y_test, Y_pred) * 100)
-
-    cross_score_test.append(cross_val_score(knn_model, X_test.values, Y_test.values, cv=kf, scoring='accuracy'))
-
-
-# plt.plot(k_values, knn_results, 'blue')
-# # plt.title(title, fontsize=10)
-# plt.ylabel('Accuracy', fontsize=8)
-# plt.xlabel('№ of Neighbours', fontsize=8)
-# plt.grid(True)
-# plt.show()
-
-plt.subplot(1, 2, 1)
-plt.plot(k_values, knn_results_train, 'blue')
-plt.title("Train", fontsize=10)
-plt.ylabel('Accuracy (%)', fontsize=8)
-plt.xlabel('Neighbours', fontsize=8)
-plt.grid(True)
-
-plt.subplot(1, 2, 2)
-plt.plot(k_values, knn_results_test, 'blue')
-plt.title("Test", fontsize=10)
-plt.ylabel('Accuracy (%)', fontsize=8)
-plt.xlabel('Neighbours', fontsize=8)
-plt.grid(True)
-
+KNN_model_results_train, KNN_cross_score_train, KNN_model_results_test, KNN_cross_score_test = check_results_KNN(k_values)
+result_graphs(k_values, KNN_model_results_test, KNN_model_results_train, KNN_cross_score_test, KNN_cross_score_train, True)
 
 plt.show()
 
 
+C = np.arange(0.01,1,0.01)
+
+LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test = check_results_LR(C)
+result_graphs(C, LR_model_results_test, LR_model_results_train, LR_cross_score_test, LR_cross_score_train, False)
+
+plt.show()
+
+X_train_res, X_test_res, Y_train_res, Y_test_res = rescaler(numeral_val, diagnosis)
+
+KNN_model_results_train_res, KNN_cross_score_train_res, KNN_model_results_test_res, KNN_cross_score_test_res = check_results_KNN(k_values)
+result_graphs(k_values, KNN_model_results_test, KNN_model_results_train, KNN_cross_score_test, KNN_cross_score_train, True)
+
+plt.show()
 
 C = np.arange(0.01,1,0.01)
-LogisticRegression(C=C)
+
+LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test = check_results_LR(C)
+result_graphs(C, LR_model_results_test, LR_model_results_train, LR_cross_score_test, LR_cross_score_train, False)
+
+
+plt.show()
 
