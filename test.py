@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from pandas import *
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
@@ -9,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
-def check_results_KNN (k_values):
+def check_results_KNN (k_values, X_train, X_test, Y_train, Y_test):
     KNN_model_results_test = []
     KNN_model_results_train = []
     KNN_cross_score_train = []
@@ -40,7 +41,7 @@ def rescaler (x_values, diagnosis):
     X_train_res, X_test_res, Y_train_res, Y_test_res = train_test_split(X_new, diagnosis, test_size=0.2, random_state=42);
     return X_train_res, X_test_res, Y_train_res, Y_test_res
 
-def check_results_LR(C):
+def check_results_LR(C, X_train, X_test, Y_train, Y_test):
     LR_model_results_test = []
     LR_model_results_train = []
     LR_cross_score_train = []
@@ -83,14 +84,14 @@ def result_graphs(X, model_test, model_train, score_test, score_train, is_knn):
     plt.grid(True)
 
     plt.subplot(2, 2, 3)
-    plt.plot(X, score_train, 'blue')
+    plt.plot(X, score_train)
     plt.title("Train", fontsize=10)
     plt.ylabel('CV score', fontsize=8)
     plt.xlabel(label, fontsize=8)
     plt.grid(True)
 
     plt.subplot(2, 2, 4)
-    plt.plot(X, score_test, 'blue')
+    plt.plot(X, score_test)
     plt.title("Test", fontsize=10)
     plt.ylabel('CV score', fontsize=8)
     plt.xlabel(label, fontsize=8)
@@ -118,7 +119,7 @@ X_train, X_test, Y_train, Y_test = train_test_split(numeral_val, diagnosis, test
 for i in range(50):
     k_values.append(i+1)
 
-KNN_model_results_train, KNN_cross_score_train, KNN_model_results_test, KNN_cross_score_test = check_results_KNN(k_values)
+KNN_model_results_train, KNN_cross_score_train, KNN_model_results_test, KNN_cross_score_test = check_results_KNN(k_values, X_train, X_test, Y_train, Y_test)
 result_graphs(k_values, KNN_model_results_test, KNN_model_results_train, KNN_cross_score_test, KNN_cross_score_train, True)
 
 plt.show()
@@ -126,22 +127,29 @@ plt.show()
 
 C = np.arange(0.01,1,0.01)
 
-LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test = check_results_LR(C)
+LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test = check_results_LR(C, X_train, X_test, Y_train, Y_test)
 result_graphs(C, LR_model_results_test, LR_model_results_train, LR_cross_score_test, LR_cross_score_train, False)
 
 plt.show()
+
+
 
 X_train_res, X_test_res, Y_train_res, Y_test_res = rescaler(numeral_val, diagnosis)
 
-KNN_model_results_train_res, KNN_cross_score_train_res, KNN_model_results_test_res, KNN_cross_score_test_res = check_results_KNN(k_values)
-result_graphs(k_values, KNN_model_results_test, KNN_model_results_train, KNN_cross_score_test, KNN_cross_score_train, True)
+X_train_res_pd = pd.DataFrame(X_train_res)
+X_test_res_pd = pd.DataFrame(X_test_res)
+Y_train_res_pd = pd.DataFrame(Y_train_res)
+Y_test_res_pd = pd.DataFrame(Y_test_res)
+
+
+KNN_model_results_train_res, KNN_cross_score_train_res, KNN_model_results_test_res, KNN_cross_score_test_res = check_results_KNN(k_values, X_train_res_pd, X_test_res_pd, Y_train_res_pd, Y_test_res_pd)
+result_graphs(k_values, KNN_model_results_test_res, KNN_model_results_train_res, KNN_cross_score_test_res, KNN_cross_score_train_res, True)
 
 plt.show()
 
-C = np.arange(0.01,1,0.01)
 
-LR_model_results_train, LR_cross_score_train, LR_model_results_test, LR_cross_score_test = check_results_LR(C)
-result_graphs(C, LR_model_results_test, LR_model_results_train, LR_cross_score_test, LR_cross_score_train, False)
+LR_model_results_train_res, LR_cross_score_train_res, LR_model_results_test_res, LR_cross_score_test_res = check_results_LR(C, X_train_res_pd, X_test_res_pd, Y_train_res_pd, Y_test_res_pd)
+result_graphs(C, LR_model_results_test_res, LR_model_results_train_res, LR_cross_score_test_res, LR_cross_score_train_res, False)
 
 
 plt.show()
